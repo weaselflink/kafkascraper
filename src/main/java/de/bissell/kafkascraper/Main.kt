@@ -45,12 +45,8 @@ private fun parseCommandLine(args: Array<String>): ScraperOptions {
         null
     }
 
-    val progress = if (commandLine.hasOption("p")) {
-        if (commandLine.getOptionValue("p") != null) {
-            Integer.parseInt(commandLine.getOptionValue("p"))
-        } else {
-            10_000
-        }
+    val progress = if (commandLine.getOptionValue("p") != null) {
+        Integer.parseInt(commandLine.getOptionValue("p"))
     } else {
         0
     }
@@ -78,7 +74,7 @@ private fun getAvailableOptions(): Options {
         addOption("e", "end", true, "End time in ISO-8601 (optional, defaults to one minute in the future)")
         addOption("f", "filter", true, "Regular expression for filtering (optional)")
         addOption("h", "help", false, "Print usage")
-        addOption("p", "progress", false, "Print a dot every n messages without match (default n is 10,000)")
+        addOption("p", "progress", true, "Print a dot every n messages without match (optional)")
     }
     return options
 }

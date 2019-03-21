@@ -55,6 +55,9 @@ class Scraper(private val scraperOptions: ScraperOptions) {
                 recordsWithoutMatch -= scraperOptions.progress
             }
         }
+        if (lastSymbolWasDot) {
+            println()
+        }
         println("Received $receivedCount records")
 
         consumer.close()
