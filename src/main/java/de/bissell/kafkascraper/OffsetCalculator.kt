@@ -2,6 +2,8 @@ package de.bissell.kafkascraper
 
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.TopicPartition
+import org.apache.kafka.common.errors.TimeoutException
+import java.time.Duration
 import java.time.Instant
 
 class OffsetCalculator(
@@ -9,28 +11,37 @@ class OffsetCalculator(
         private val scraperOptions: ScraperOptions
 ) {
 
-    fun offsets() =
-            Offsets(
-                    createTopicPartitions(),
-                    startOffsets(scraperOptions.start),
-                    endOffsets(scraperOptions.end)
-            )
+    fun offsets(): Offsets {
+        checkForTopic()
+        return Offsets(
+                createTopicPartitions(),
+                startOffsets(scraperOptions.start),
+                endOffsets(scraperOptions.end)
+        )
+    }
+
+    private fun checkForTopic() {
+        try {
+            val topics = consumer.listTopics(Duration.ofSeconds(10))
+            val topicNames = topics.orEmpty().keys
+            if (!topicNames.contains(scraperOptions.topic)) {
+                throw TopicException("Could not find topic ${scraperOptions.topic} in available topics: $topicNames")
+            }
+        } catch (e: TimeoutException) {
+            throw TopicException("Error while fetching topic list from ${scraperOptions.bootstrap}")
+        }
+    }
 
     private fun startOffsets(start: Instant): Map<TopicPartition, Long> =
             createOffsetsForTime(start)
 
-    private fun endOffsets(end: Instant): Map<TopicPartition, Long>  {
+    private fun endOffsets(end: Instant): Map<TopicPartition, Long> {
         val lastOffsets = lastOffsets()
         val endOffsets = createOffsetsForTime(end)
 
         return lastOffsets
                 .mapValues {
-                    val endOffset = endOffsets[it.key]
-                    if (endOffset != null) {
-                        endOffset
-                    } else {
-                        it.value - 1
-                    }
+                    endOffsets[it.key] ?: it.value - 1
                 }
     }
 
@@ -57,4 +68,6 @@ data class Offsets(
         val startOffsets: Map<TopicPartition, Long>,
         val endOffsets: Map<TopicPartition, Long>
 )
+
+class TopicException(message: String?) : Exception(message)
 

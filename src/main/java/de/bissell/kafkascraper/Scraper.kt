@@ -9,6 +9,7 @@ import org.apache.kafka.common.serialization.StringDeserializer
 import java.time.Duration
 import java.time.Instant
 import java.util.*
+import kotlin.system.exitProcess
 
 class Scraper(private val scraperOptions: ScraperOptions) {
 
@@ -19,7 +20,12 @@ class Scraper(private val scraperOptions: ScraperOptions) {
 
     init {
         consumer = createConsumer()
-        offsets = OffsetCalculator(consumer, scraperOptions).offsets()
+        try {
+            offsets = OffsetCalculator(consumer, scraperOptions).offsets()
+        } catch (e: TopicException) {
+            println(e.message)
+            exitProcess(1)
+        }
         println(offsets.toString())
         offsets.topicPartitions
                 .forEach { currentOffsets[it] = 0L }

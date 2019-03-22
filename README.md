@@ -40,5 +40,5 @@ a dot (".") is printed.
 ### Known issues
 
 * If no messages are received (before filtering) process waits forever.
-* No checks if cluster or topic exists are performed.
+* No checks if cluster exists are performed.
 * Only strings (includes JSON) are supported for keys and values, anything else is printed as binary.

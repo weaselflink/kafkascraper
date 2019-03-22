@@ -6,6 +6,7 @@ import io.mockk.mockk
 import org.apache.kafka.clients.consumer.KafkaConsumer
 import org.apache.kafka.common.PartitionInfo
 import org.apache.kafka.common.TopicPartition
+import org.apache.kafka.common.errors.TimeoutException
 import org.assertj.core.api.KotlinAssertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -32,7 +33,31 @@ internal class OffsetCalculatorTest {
     }
 
     @Test
-    internal fun createsTopicPartitions() {
+    internal fun `breaks on timeout for fetching topic list`() {
+        every { consumer.listTopics(any()) } throws TimeoutException()
+
+        val result = kotlin.runCatching {
+            OffsetCalculator(consumer, scraperOptions).offsets()
+        }
+
+        assertThat(result.exceptionOrNull()).isInstanceOf(TopicException::class.java)
+    }
+
+    @Test
+    internal fun `breaks on missing topic in fetched topic list`() {
+        every { consumer.listTopics(any()) } returns mutableMapOf(Pair("wrong", mutableListOf(aPartitionInfo())))
+        every { consumer.partitionsFor(any()) } returns listOf(aPartitionInfo())
+
+        val result = kotlin.runCatching {
+            OffsetCalculator(consumer, scraperOptions).offsets()
+        }
+
+        assertThat(result.exceptionOrNull()).isInstanceOf(TopicException::class.java)
+    }
+
+    @Test
+    internal fun `creates topic partitions`() {
+        every { consumer.listTopics(any()) } returns mutableMapOf(Pair(dummyTopic, mutableListOf(aPartitionInfo())))
         every { consumer.partitionsFor(any()) } returns listOf(aPartitionInfo())
 
         val offsetCalculator = OffsetCalculator(consumer, scraperOptions)
