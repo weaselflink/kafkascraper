@@ -64,6 +64,7 @@ class OffsetCalculator(
     private fun createPartitionTimeMap(time: Instant): Map<TopicPartition, Long> =
             createTopicPartitions()
                     .map { it to time.toEpochMilli() }
+                    .filter { it.second >= 0 }
                     .toMap()
 
     private fun createTopicPartitions(): List<TopicPartition> =
