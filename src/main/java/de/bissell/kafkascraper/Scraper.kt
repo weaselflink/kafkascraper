@@ -36,7 +36,7 @@ class Scraper(private val scraperOptions: ScraperOptions) {
 
         var recordsWithoutMatch = 0
         var lastSymbolWasDot = false
-        while (!Thread.currentThread().isInterrupted && !finalOffsetsReached()) {
+        while (!Thread.currentThread().isInterrupted && !finalOffsetsReached() && !maxCountReached()) {
             val records = consumer.poll(Duration.ofSeconds(1))
             recordsWithoutMatch += records.count()
             updateCurrentOffsets(records)
@@ -45,7 +45,7 @@ class Scraper(private val scraperOptions: ScraperOptions) {
                 val key = it.key()
                 val body = it.value()
 
-                if (recordInTimeSpan(it) && recordMatchesFilter(it)) {
+                if (recordInTimeSpan(it) && recordMatchesFilter(it) && !maxCountReached()) {
                     if (lastSymbolWasDot) {
                         println()
                         lastSymbolWasDot = false
@@ -68,6 +68,9 @@ class Scraper(private val scraperOptions: ScraperOptions) {
 
         consumer.close()
     }
+
+    private fun maxCountReached() =
+            scraperOptions.count != null && receivedCount >= scraperOptions.count
 
     private fun recordMatchesFilter(record: ConsumerRecord<String, String>): Boolean {
         if (scraperOptions.filter == null) {

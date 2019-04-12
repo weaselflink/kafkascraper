@@ -50,6 +50,11 @@ private fun parseCommandLine(args: Array<String>): ScraperOptions {
     } else {
         0
     }
+    val count = if (commandLine.getOptionValue("c") != null) {
+        Integer.parseInt(commandLine.getOptionValue("c"))
+    } else {
+        null
+    }
 
     return ScraperOptions(
             bootstrap = commandLine.getOptionValue("b"),
@@ -57,7 +62,8 @@ private fun parseCommandLine(args: Array<String>): ScraperOptions {
             start = start,
             end = end,
             filter = filter,
-            progress = progress
+            progress = progress,
+            count = count
     )
 }
 
@@ -75,6 +81,7 @@ private fun getAvailableOptions(): Options {
         addOption("f", "filter", true, "Regular expression for filtering (optional)")
         addOption("h", "help", false, "Print usage")
         addOption("p", "progress", true, "Print a dot every n messages without match (optional)")
+        addOption("c", "count", true, "Only output given count of matching records (optional)")
     }
     return options
 }
@@ -85,5 +92,6 @@ data class ScraperOptions(
         val start: Instant = Instant.now().minusSeconds(1),
         val end: Instant = Instant.now(),
         val filter: Regex? = null,
-        val progress: Int = 0
+        val progress: Int = 0,
+        val count: Int? = null
 )
