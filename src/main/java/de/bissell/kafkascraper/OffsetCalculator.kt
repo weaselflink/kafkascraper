@@ -32,8 +32,16 @@ class OffsetCalculator(
         }
     }
 
-    private fun startOffsets(start: Instant): Map<TopicPartition, Long> =
-            createOffsetsForTime(start)
+    private fun startOffsets(start: Instant): Map<TopicPartition, Long> {
+        val lastOffsets = lastOffsets()
+        val startOffsets = createOffsetsForTime(start)
+
+        return lastOffsets
+                .mapValues {
+                    startOffsets[it.key] ?: 0L
+                }
+
+    }
 
     private fun endOffsets(end: Instant): Map<TopicPartition, Long> {
         val lastOffsets = lastOffsets()
