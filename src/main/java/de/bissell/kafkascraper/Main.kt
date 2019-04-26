@@ -29,15 +29,16 @@ private fun parseCommandLine(args: Array<String>): ScraperOptions {
         printHelp()
     }
 
+    val now = Instant.now()
     val start = if (commandLine.getOptionValue("s") != null) {
-        Instant.parse(commandLine.getOptionValue("s"))
+        parseTime(commandLine.getOptionValue("s"), now)
     } else {
-        Instant.now().minusSeconds(60L)
+        now.minusSeconds(60L)
     }
     val end = if (commandLine.getOptionValue("e") != null) {
-        Instant.parse(commandLine.getOptionValue("e"))
+        parseTime(commandLine.getOptionValue("e"), now)
     } else {
-        Instant.now().plusSeconds(60L)
+        now.plusSeconds(60L)
     }
     val filter = if (commandLine.getOptionValue("f") != null) {
         Regex(commandLine.getOptionValue("f"))
@@ -76,8 +77,8 @@ private fun getAvailableOptions(): Options {
     val options = Options().apply {
         addOption("b", "bootstrap", true, "List of bootstrap server URLs (required, comma separated)")
         addOption("t", "topic", true, "Name of topic (required)")
-        addOption("s", "start", true, "Start time in ISO-8601 (optional, defaults to one minute ago)")
-        addOption("e", "end", true, "End time in ISO-8601 (optional, defaults to one minute in the future)")
+        addOption("s", "start", true, """Start time in ISO-8601 or as a relative string like "-10s", "-1 m" or "5 h ago" (optional, defaults to one minute ago)""")
+        addOption("e", "end", true, """End time in ISO-8601 or as a relative string like "-10s", "-1 m" or "5 h ago" (optional, defaults to one minute in the future)""")
         addOption("f", "filter", true, "Regular expression for filtering (optional)")
         addOption("h", "help", false, "Print usage")
         addOption("p", "progress", true, "Print a dot every n messages without match (optional)")
